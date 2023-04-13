@@ -86,11 +86,12 @@
                 >Image size:</label
               >
               <input
-                class="py-2 px-3 border rounded w-full"
+                class="py-2 px-3 border bg-gray-200 rounded w-full"
                 type="text"
                 id="imageSize"
                 :value="imageSize"
                 disabled
+                
               />
             </div>
 

@@ -236,6 +236,7 @@ export default {
       link.click();
     },
     resetCanvas() {
+      location.reload();
       const canvas = this.$refs.canvas;
       const ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -249,7 +250,8 @@ export default {
       this.outputFileName = null;
       this.imageSize = '';
 
-      document.getElementById('fileInput').value = null;
+      const fileInput = document.getElementById('fileInput');
+      fileInput.value = null;
     },
   },
 };

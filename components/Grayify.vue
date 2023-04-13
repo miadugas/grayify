@@ -33,7 +33,7 @@
             </h2>
             <div class="my-4">
               <input
-                class="py-2 px-3 border rounded w-full"
+                class="px-3 border rounded w-full"
                 type="file"
                 id="fileInput"
                 @change="onFileSelected"
@@ -80,14 +80,39 @@
               </select>
             </div>
             <!-- old end -->
+            <!-- Image size -->
+            <div class="my-4">
+              <label class="block font-medium mb-1" for="imageSize"
+                >Image size:</label
+              >
+              <input
+                class="py-2 px-3 border rounded w-full"
+                type="text"
+                id="imageSize"
+                :value="imageSize"
+                disabled
+              />
+            </div>
+
             <!-- old -->
-            <button
-              v-if="imageLoaded"
-              @click="convertToGrayscale"
-              class="my-4 py-2 px-4 bg-gray-800 text-white rounded hover:bg-gray-700"
-            >
-              Convert to grayscale
-            </button>
+            <div class="flex my-4 space-x-4">
+              <button
+                v-if="imageLoaded"
+                @click="convertToGrayscale"
+                class="py-2 px-4 bg-green-500 text-white rounded hover:bg-green-600"
+              >
+                Convert to grayscale
+              </button>
+
+              <button
+                v-if="imageLoaded"
+                @click="resetCanvas"
+                class="py-2 px-4 bg-red-500 text-white rounded hover:bg-red-600"
+              >
+                Reset
+              </button>
+            </div>
+
             <!-- old end -->
 
             <!-- old -->
@@ -120,75 +145,6 @@
                 >Download image</a
               >
             </div>
-            <!-- old end -->
-            <!-- <form class="mt-8 space-y-6" action="#">
-              <div>
-                <label
-                  for="email"
-                  class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                  >Your email</label
-                >
-                <input
-                  type="email"
-                  name="email"
-                  id="email"
-                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  placeholder="name@company.com"
-                  required
-                />
-              </div>
-              <div>
-                <label
-                  for="password"
-                  class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                  >Your password</label
-                >
-                <input
-                  type="password"
-                  name="password"
-                  id="password"
-                  placeholder="••••••••"
-                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  required
-                />
-              </div>
-              <div class="flex items-start">
-                <div class="flex items-center h-5">
-                  <input
-                    id="remember"
-                    aria-describedby="remember"
-                    name="remember"
-                    type="checkbox"
-                    class="w-4 h-4 border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-blue-300 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600"
-                    required
-                  />
-                </div>
-                <div class="ml-3 text-sm">
-                  <label
-                    for="remember"
-                    class="font-medium text-gray-500 dark:text-gray-400"
-                    >Remember this device</label
-                  >
-                </div>
-                <a
-                  href="#"
-                  class="ml-auto text-sm font-medium text-blue-600 hover:underline dark:text-blue-500"
-                  >Lost Password?</a
-                >
-              </div>
-              <button
-                type="submit"
-                class="w-full px-5 py-3 text-base font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 sm:w-auto dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-              >
-                Login to your account
-              </button>
-              <div class="text-sm font-medium text-gray-900 dark:text-white">
-                Not registered yet?
-                <a class="text-blue-600 hover:underline dark:text-blue-500"
-                  >Create account</a
-                >
-              </div>
-            </form> -->
           </div>
         </div>
       </div>
@@ -208,15 +164,21 @@ export default {
       fileType: 'jpeg',
       outputDataURL: null,
       outputFileName: null,
+      imageSize: '',
     };
   },
   methods: {
     onFileSelected(event) {
       const file = event.target.files[0];
+      this.imageSize = (file.size / 1024).toFixed(2) + ' KB';
+      if (file.size / (1024 * 1024) > 1) {
+        this.imageSize = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+      }
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = () => {
         const img = new Image();
+
         img.onload = () => {
           const canvas = this.$refs.canvas;
           const ctx = canvas.getContext('2d');
@@ -230,6 +192,10 @@ export default {
           canvas.height = height;
           ctx.drawImage(img, 0, 0, width, height);
           this.imageLoaded = true;
+
+          // Set the current width and height values
+          this.canvasWidth = img.width;
+          this.canvasHeight = img.height;
         };
         img.src = reader.result;
       };
@@ -268,6 +234,22 @@ export default {
       link.download = this.outputFileName;
       link.href = this.outputDataURL;
       link.click();
+    },
+    resetCanvas() {
+      const canvas = this.$refs.canvas;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      this.imageLoaded = false;
+      this.progress = 0;
+      this.canvasWidth = 0;
+      this.canvasHeight = 0;
+      this.fileType = 'jpeg';
+      this.outputDataURL = null;
+      this.outputFileName = null;
+      this.imageSize = '';
+
+      document.getElementById('fileInput').value = null;
     },
   },
 };
